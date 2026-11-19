@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0f17;
+  --color-panel: #121826;
+  --color-panel2: #182033;
+  --color-line: #243049;
+  --color-muted: #8a96ad;
+  --color-text: #e6ebf5;
+  --color-up: #16a34a;
+  --color-down: #dc2626;
+  --color-warn: #f59e0b;
+  --color-accent: #3b82f6;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.card { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .8rem; border-radius: 8px;
+  font-size: .85rem; font-weight: 500; border: 1px solid var(--color-line); background: var(--color-panel2);
+  color: var(--color-text); transition: background .15s, border-color .15s; cursor: pointer;
+}
+.btn:hover { border-color: #3a4a6b; background: #1d2740; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); border-color: var(--color-accent); color: white; }
+.btn-primary:hover { background: #2f6fe0; border-color: #2f6fe0; }
+.btn-danger { background: #7f1d1d; border-color: #991b1b; color: #fee2e2; }
+.btn-danger:hover { background: #991b1b; }
+.input {
+  width: 100%; background: #0e1422; border: 1px solid var(--color-line); border-radius: 8px;
+  padding: .45rem .6rem; font-size: .875rem; color: var(--color-text); outline: none;
+}
+.input:focus { border-color: var(--color-accent); }
+.label { font-size: .75rem; color: var(--color-muted); margin-bottom: .25rem; display: block; }
+table.tbl { width: 100%; font-size: .825rem; border-collapse: collapse; }
+table.tbl th { text-align: left; font-weight: 500; color: var(--color-muted); padding: .55rem .6rem;
+  border-bottom: 1px solid var(--color-line); white-space: nowrap; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+table.tbl td { padding: .55rem .6rem; border-bottom: 1px solid #1a2336; white-space: nowrap; }
+table.tbl tr:hover td { background: #141c2d; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #2a3550; border-radius: 4px; }
