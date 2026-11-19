@@ -39,9 +39,12 @@ export default function Layout() {
       <aside className={clsx('fixed inset-y-0 left-0 z-40 w-60 border-r border-line bg-panel transition-transform lg:static lg:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full')}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-          <div>
-            <div className="font-bold tracking-tight">Farooq Bot</div>
-            <div className="text-xs text-muted">Nifty 50 · HA 3-Filter</div>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="WelthWest" className="h-9 w-9" />
+            <div>
+              <div className="font-bold tracking-tight leading-tight">WelthWest Algo</div>
+              <div className="text-xs text-muted">Nifty 50 · HA 3-Filter</div>
+            </div>
           </div>
           <button className="lg:hidden text-muted" onClick={() => setOpen(false)}><X size={18} /></button>
         </div>
@@ -83,6 +86,10 @@ export default function Layout() {
         <main className="flex-1 overflow-x-hidden p-4 lg:p-6">
           <Outlet />
         </main>
+        <footer className="flex flex-wrap items-center justify-center gap-2 border-t border-line px-4 py-3 text-xs text-muted">
+          <img src="/logo.png" alt="" className="h-5 w-5" />
+          <span>© {new Date().getFullYear()} <b className="text-text">WelthWest</b> · WelthWest Algo. Trading involves risk.</span>
+        </footer>
       </div>
     </div>
   )

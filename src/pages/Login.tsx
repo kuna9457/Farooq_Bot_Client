@@ -24,15 +24,19 @@ export default function Login() {
   return (
     <div className="flex min-h-full items-center justify-center p-4">
       <form onSubmit={submit} className="card w-full max-w-sm p-6 space-y-4">
-        <div>
-          <h1 className="text-lg font-bold">Farooq Trading Bot</h1>
-          <p className="text-sm text-muted">Sign in to the dashboard</p>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="WelthWest" className="h-12 w-12" />
+          <div>
+            <h1 className="text-lg font-bold leading-tight">WelthWest Algo</h1>
+            <p className="text-sm text-muted">Sign in to the dashboard</p>
+          </div>
         </div>
         <div><label className="label">Username</label><input className="input" value={u} onChange={(e) => setU(e.target.value)} /></div>
         <div><label className="label">Password</label><input className="input" type="password" value={p} onChange={(e) => setP(e.target.value)} autoFocus /></div>
         {err && <div className="text-sm text-down">{err}</div>}
         <button className="btn btn-primary w-full justify-center" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
+      <p className="fixed bottom-3 inset-x-0 text-center text-xs text-muted">© {new Date().getFullYear()} WelthWest</p>
     </div>
   )
 }

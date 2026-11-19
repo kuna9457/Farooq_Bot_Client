@@ -1,7 +1,7 @@
 export const TOKEN_KEY = 'fb_token'
 
 // Backend base URL. Empty in local dev (Vite proxies /api and /ws). On Vercel set VITE_API_URL to the Render URL,
-// e.g. https://farooq-bot-api.onrender.com
+// e.g. https://welthwest-algo-api.onrender.com
 export const API_BASE: string = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim().replace(/\/+$/, '')
 export function wsUrl(token: string): string {
   const base = API_BASE || location.origin
