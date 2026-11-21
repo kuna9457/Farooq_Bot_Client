@@ -6,6 +6,10 @@ import { api } from '../lib/api'
 
 type P = any
 
+const MA_KINDS: [string, string][] = [['SMA', 'SMA'], ['EMA', 'EMA'], ['SMMA', 'SMMA (RMA)'], ['WMA', 'WMA'], ['VWMA', 'VWMA']]
+const MA_SOURCES: [string, string][] = [['open', 'Open'], ['high', 'High'], ['low', 'Low'], ['close', 'Close'], ['volume', 'Volume'],
+  ['hl2', '(H + L)/2'], ['hlc3', '(H + L + C)/3'], ['ohlc4', '(O + H + L + C)/4'], ['hlcc4', '(H + L + C + C)/4']]
+
 function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return <div><label className="label">{label}</label>{children}{hint && <p className="mt-1 text-[11px] text-muted">{hint}</p>}</div>
 }
@@ -105,8 +109,24 @@ export default function Settings() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3 flex flex-wrap gap-4">{chk('filter2.enabled', 'Enabled')}{chk('filter2.use_heikin_ashi', 'Heikin-Ashi')}{chk('filter2.setup_requires_fresh_signal', 'Setup must be a fresh CE signal candle')}</div>
             {ce('filter2')}
-            <Field label="Ribbon MA type">{sel('filter2.ribbon.kind', ['SMA', 'EMA', 'WMA', 'RMA'])}</Field>
-            <Field label="Ribbon source" hint="Price the moving averages are calculated on">{sel('filter2.ribbon.source', ['close', 'open', 'high', 'low', 'hl2', 'hlc3', 'ohlc4'])}</Field>
+            <div className="sm:col-span-3">
+              <label className="label">MA ribbon (same inputs as TradingView)</label>
+              <div className="space-y-2">
+                {p.filter2.ribbon.mas.map((m: any, i: number) => (
+                  <div key={i} className="grid grid-cols-[6rem_1fr_1.4fr_5rem] items-center gap-2">
+                    <label className="flex items-center gap-2 text-sm whitespace-nowrap"><input type="checkbox" checked={m.enabled} onChange={(e) => set(`filter2.ribbon.mas.${i}.enabled`, e.target.checked)} />MA #{i + 1}</label>
+                    <select className="input" value={m.kind} onChange={(e) => set(`filter2.ribbon.mas.${i}.kind`, e.target.value)}>
+                      {MA_KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                    <select className="input" value={m.source} onChange={(e) => set(`filter2.ribbon.mas.${i}.source`, e.target.value)}>
+                      {MA_SOURCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                    <input type="number" min={1} className="input" value={m.length} onChange={(e) => set(`filter2.ribbon.mas.${i}.length`, e.target.value === '' ? '' : Number(e.target.value))} />
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-muted">Per MA: on/off · type · price source · length. Timeframe is the daily chart and only completed daily candles are used (like “wait for timeframe closes”).</p>
+            </div>
             <div className="sm:col-span-3">
               <label className="label">Candle must be beyond the ribbon on</label>
               <div className="flex flex-wrap gap-4">
@@ -119,8 +139,6 @@ export default function Settings() {
               </div>
               <p className="mt-1 text-[11px] text-muted">All ticked values must be above the upper ribbon (BUY) or below the lower ribbon (SELL). Default: open + close.</p>
             </div>
-            <Field label="Ribbon lengths (comma)"><input className="input" value={p.filter2.ribbon.lengths.join(',')}
-              onChange={(e) => set('filter2.ribbon.lengths', e.target.value.split(',').map((x) => Number(x.trim())).filter(Boolean))} /></Field>
             <Field label="Setup lookback (days)">{numIn('filter2.setup_lookback_days')}</Field>
           </div>
         </Card>
