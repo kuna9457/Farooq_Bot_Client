@@ -106,6 +106,19 @@ export default function Settings() {
             <div className="sm:col-span-3 flex flex-wrap gap-4">{chk('filter2.enabled', 'Enabled')}{chk('filter2.use_heikin_ashi', 'Heikin-Ashi')}{chk('filter2.setup_requires_fresh_signal', 'Setup must be a fresh CE signal candle')}</div>
             {ce('filter2')}
             <Field label="Ribbon MA type">{sel('filter2.ribbon.kind', ['SMA', 'EMA', 'WMA', 'RMA'])}</Field>
+            <Field label="Ribbon source" hint="Price the moving averages are calculated on">{sel('filter2.ribbon.source', ['close', 'open', 'high', 'low', 'hl2', 'hlc3', 'ohlc4'])}</Field>
+            <div className="sm:col-span-3">
+              <label className="label">Candle must be beyond the ribbon on</label>
+              <div className="flex flex-wrap gap-4">
+                {(['open', 'high', 'low', 'close'] as const).map((f) => (
+                  <label key={f} className="flex items-center gap-2 text-sm capitalize">
+                    <input type="checkbox" checked={p.filter2.candle_fields.includes(f)}
+                      onChange={(e) => set('filter2.candle_fields', e.target.checked ? [...p.filter2.candle_fields, f] : p.filter2.candle_fields.filter((x: string) => x !== f))} />{f}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-muted">All ticked values must be above the upper ribbon (BUY) or below the lower ribbon (SELL). Default: open + close.</p>
+            </div>
             <Field label="Ribbon lengths (comma)"><input className="input" value={p.filter2.ribbon.lengths.join(',')}
               onChange={(e) => set('filter2.ribbon.lengths', e.target.value.split(',').map((x) => Number(x.trim())).filter(Boolean))} /></Field>
             <Field label="Setup lookback (days)">{numIn('filter2.setup_lookback_days')}</Field>
