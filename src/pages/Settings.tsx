@@ -176,9 +176,31 @@ export default function Settings() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3 flex gap-4">{chk('filter3.enabled', 'Enabled')}{chk('filter3.use_heikin_ashi', 'Heikin-Ashi')}</div>
             {ce('filter3')}
-            <Field label="VP rows">{numIn('filter3.vp.rows')}</Field>
-            <Field label="Value area %">{numIn('filter3.vp.value_area_pct')}</Field>
-            <Field label="Above POC rule">{sel('filter3.above_poc_rule', ['close', 'open_close'])}</Field>
+            <div className="sm:col-span-3 -mb-1 text-[11px] text-muted">Previous-day Fixed Range Volume Profile — same inputs as TradingView FRVP</div>
+            <Field label="Rows layout" hint="TradingView: Rows Layout">
+              <select className="input" value={p.filter3.vp.layout} onChange={(e) => set('filter3.vp.layout', e.target.value)}>
+                <option value="rows">Number of rows</option>
+                <option value="ticks">Ticks per row</option>
+              </select>
+            </Field>
+            <Field label={p.filter3.vp.layout === 'ticks' ? 'Row size (ticks per row)' : 'Row size (number of rows)'} hint="TradingView: Row Size. Default 24 rows.">{numIn('filter3.vp.rows')}</Field>
+            <Field label="Volume" hint="Up/Down and Total give the same POC / value area. Delta ranks rows by |up volume − down volume|; a candle counts as up when close ≥ open.">
+              <select className="input" value={p.filter3.vp.volume_mode} onChange={(e) => set('filter3.vp.volume_mode', e.target.value)}>
+                <option value="updown">Up/Down</option>
+                <option value="total">Total</option>
+                <option value="delta">Delta</option>
+              </select>
+            </Field>
+            <Field label="Value area volume %" hint="TradingView: Value Area Volume. Default 70.">{numIn('filter3.vp.value_area_pct')}</Field>
+            {p.filter3.vp.layout === 'ticks' && <Field label="Tick size (₹)" hint="Price of one tick. NSE equities: 0.05">{numIn('filter3.vp.tick_size', 0.01)}</Field>}
+            <Field label="Candle must be beyond POC on" hint="Close only: the 5-min candle's close must be above POC (BUY) / below POC (SELL). Open + close: both its open and close must be.">
+              <select className="input" value={p.filter3.above_poc_rule} onChange={(e) => set('filter3.above_poc_rule', e.target.value)}>
+                <option value="close">Close only</option>
+                <option value="open_close">Open and close</option>
+              </select>
+            </Field>
+            <div className="sm:col-span-3">{chk('filter3.wait_for_candle_close', 'Wait for the 5-min candle to close (Chandelier + POC are judged on the closed candle, not the forming one)')}</div>
+            <p className="sm:col-span-3 text-[11px] text-muted">“Extend right” in TradingView only stretches the drawn lines; the bot always compares today's candles with the previous day's POC, so there is nothing to set for it.</p>
           </div>
         </Card>
         <Card title="Risk & exits">
