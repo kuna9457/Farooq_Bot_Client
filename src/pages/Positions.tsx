@@ -33,12 +33,12 @@ export default function Positions() {
       <Card title="Open positions">
         {open.data?.length ? (
           <div className="overflow-x-auto"><table className="tbl">
-            <thead><tr><th>Stock</th><th>Side</th><th>Qty</th><th className="text-right">Entry</th><th className="text-right">LTP</th><th className="text-right">SL</th><th className="text-right">Target</th><th className="text-right">Unrealized</th><th>Mode</th><th>Entry time</th><th /></tr></thead>
+            <thead><tr><th>Stock</th><th>Side</th><th>Qty</th><th className="text-right">Entry</th><th className="text-right">LTP</th><th className="text-right">Unrealized</th><th>Mode</th><th>Entry time</th><th /></tr></thead>
             <tbody>{open.data.map((p) => (
               <tr key={p._id}>
                 <td className="font-semibold">{p.symbol}</td><td><SideBadge side={p.side} /></td><td className="num">{p.qty}</td>
                 <td className="num text-right">{num(p.entry_price)}</td><td className="num text-right">{num(ltp[p.symbol] ?? p.ltp)}</td>
-                <td className="num text-right">{num(p.sl)}</td><td className="num text-right">{num(p.target)}</td>
+                
                 <td className={`num text-right font-semibold ${pnlColor(p.unrealized)}`}>{signed(p.unrealized)}</td>
                 <td className="text-xs">{p.mode}/{p.broker}</td><td className="text-xs text-muted">{time(p.entry_time)}</td>
                 <td><button className="btn !py-1 text-xs" disabled={exit.isPending} onClick={() => confirm(`Exit ${p.symbol} at market?`) && exit.mutate(p._id)}>Exit</button></td>

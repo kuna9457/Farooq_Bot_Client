@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, Empty, FilterChip, SideBadge } from '../components/ui'
 import { api } from '../lib/api'
 import type { Candidate, FilterState, Session } from '../lib/api'
@@ -18,13 +19,14 @@ export default function Scanner() {
     return date ? m : { ...m, ...live.filters }
   }, [q.data, live.filters, date])
   const [sel, setSel] = useState<string | null>(null)
+  const wl = s?.mode === 'watchlist'
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">Scanner & Filters</h1>
-          <p className="text-sm text-muted">08:30 scan → 09:30 regime → continuous F1 / F2 / F3 checks</p>
+          <h1 className="text-xl font-bold">{wl ? 'Watchlist & Filters' : 'Scanner & Filters'}</h1>
+          <p className="text-sm text-muted">{wl ? 'Manual watchlist → 09:30 start → continuous F1 / F2 / F3 checks' : '08:30 scan → 09:30 regime → continuous F1 / F2 / F3 checks'}</p>
         </div>
         <div>
           <label className="label">Session</label>
@@ -35,18 +37,26 @@ export default function Scanner() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card p-4"><div className="text-xs text-muted">Universe scanned</div><div className="num text-lg font-semibold">{s?.scan_universe_size ?? '—'}</div></div>
-        <div className="card p-4"><div className="text-xs text-muted">Nifty at decision</div><div className="num text-lg font-semibold">{num(s?.nifty_price)} <span className="text-sm">({signed(s?.nifty_change)})</span></div></div>
-        <div className="card p-4"><div className="text-xs text-muted">Regime</div><div className="mt-1"><SideBadge side={s?.regime} /> <span className="text-xs text-muted ml-2">{s?.regime_rule} ±{s?.regime_threshold}</span></div></div>
-      </div>
+      {wl ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="card p-4"><div className="text-xs text-muted">Stocks on watchlist</div><div className="num text-lg font-semibold">{(s?.buy_candidates?.length ?? 0) + (s?.sell_candidates?.length ?? 0)}</div></div>
+          <div className="card p-4"><div className="text-xs text-muted">Bot started</div><div className="num text-lg font-semibold">{s?.regime === 'WATCHLIST' ? time(s?.started_at) : 'waiting for 09:30'}</div></div>
+          <div className="card p-4"><div className="text-xs text-muted">Manage the list</div><div className="mt-1 text-sm"><Link className="text-accent" to="/watchlist">Open Watchlist page →</Link></div></div>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="card p-4"><div className="text-xs text-muted">Universe scanned</div><div className="num text-lg font-semibold">{s?.scan_universe_size ?? '—'}</div></div>
+          <div className="card p-4"><div className="text-xs text-muted">Nifty at decision</div><div className="num text-lg font-semibold">{num(s?.nifty_price)} <span className="text-sm">({signed(s?.nifty_change)})</span></div></div>
+          <div className="card p-4"><div className="text-xs text-muted">Regime</div><div className="mt-1"><SideBadge side={s?.regime} /> <span className="text-xs text-muted ml-2">{s?.regime_rule} ±{s?.regime_threshold}</span></div></div>
+        </div>
+      )}
 
       {(['BUY', 'SELL'] as const).map((side) => {
         const list: Candidate[] = side === 'BUY' ? s?.buy_candidates ?? [] : s?.sell_candidates ?? []
         return (
-          <Card key={side} title={<span className="flex items-center gap-2"><SideBadge side={side} /> {side === 'BUY' ? 'New month HIGH' : 'New month LOW'} · top {list.length} by market cap
-            {s?.regime && <span className="text-xs text-muted font-normal">{s.regime === side ? '(active today)' : '(inactive today)'}</span>}</span>}>
-            {!list.length ? <Empty>No stocks qualified</Empty> : (
+          <Card key={side} title={<span className="flex items-center gap-2"><SideBadge side={side} /> {wl ? `Watchlist · ${list.length} stock${list.length === 1 ? '' : 's'}` : `${side === 'BUY' ? 'New month HIGH' : 'New month LOW'} · top ${list.length} by market cap`}
+            {s?.regime && !wl && <span className="text-xs text-muted font-normal">{s.regime === side ? '(active today)' : '(inactive today)'}</span>}</span>}>
+            {!list.length ? <Empty>{wl ? `No ${side} stocks on the watchlist` : 'No stocks qualified'}</Empty> : (
               <div className="space-y-3">
                 {list.map((c) => {
                   const f = filters[c.symbol]
@@ -54,9 +64,9 @@ export default function Scanner() {
                   return (
                     <div key={c.symbol} className="rounded-lg border border-line bg-panel2/40">
                       <button className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-left" onClick={() => setSel(open ? null : c.symbol)}>
-                        <span className="w-28 font-semibold">#{c.rank} {c.symbol}</span>
-                        <span className="text-xs text-muted w-28">{crore(c.market_cap_cr)}</span>
-                        <span className="text-xs text-muted w-48">{side === 'BUY' ? `month high ${num(c.month_high_level)}` : `month low ${num(c.month_low_level)}`} · close {num(c.last_close)}</span>
+                        <span className="w-28 font-semibold">{c.rank ? `#${c.rank} ` : ''}{c.symbol}</span>
+                        {!wl && <span className="text-xs text-muted w-28">{crore(c.market_cap_cr)}</span>}
+                        {!wl && <span className="text-xs text-muted w-48">{side === 'BUY' ? `month high ${num(c.month_high_level)}` : `month low ${num(c.month_low_level)}`} · close {num(c.last_close)}</span>}
                         <span className="flex gap-2"><FilterChip label="F1" f={f?.F1} /><FilterChip label="F2" f={f?.F2} /><FilterChip label="F3" f={f?.F3} /></span>
                         <span className={`text-xs font-semibold ${f?.all_passed ? 'text-up' : 'text-muted'}`}>{f ? (f.all_passed ? 'ALL PASS → entry' : 'not all passing') : 'not evaluated'}</span>
                         <span className="ml-auto text-xs text-muted">{time(f?.evaluated_at)}</span>

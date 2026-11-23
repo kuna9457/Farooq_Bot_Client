@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Activity, BarChart3, FlaskConical, History, LayoutDashboard, LogOut, Menu, PlugZap, ScrollText, Settings, Wallet, X } from 'lucide-react'
+import { Activity, BarChart3, FlaskConical, History, LayoutDashboard, ListPlus, LogOut, Menu, PlugZap, ScrollText, Settings, Wallet, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +9,7 @@ import { num, signed } from '../lib/format'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/watchlist', label: 'Watchlist', icon: ListPlus },
   { to: '/scanner', label: 'Scanner & Filters', icon: Activity },
   { to: '/chart', label: 'Charts', icon: BarChart3 },
   { to: '/positions', label: 'Positions & Orders', icon: Wallet },
@@ -43,7 +44,7 @@ export default function Layout() {
             <img src="/logo.png" alt="WelthWest" className="h-9 w-9" />
             <div>
               <div className="font-bold tracking-tight leading-tight">WelthWest Algo</div>
-              <div className="text-xs text-muted">Nifty 50 · HA 3-Filter</div>
+              <div className="text-xs text-muted">NSE · HA 3-Filter</div>
             </div>
           </div>
           <button className="lg:hidden text-muted" onClick={() => setOpen(false)}><X size={18} /></button>
@@ -76,10 +77,16 @@ export default function Layout() {
           <span className="text-xs text-muted">Market: <b className={status?.market_open ? 'text-up' : 'text-muted'}>{status?.market_open ? 'OPEN' : 'CLOSED'}</b></span>
           <span className="text-xs">Mode: <b className={mode === 'live' ? 'text-down' : 'text-warn'}>{mode?.toUpperCase() ?? '—'}</b></span>
           <span className="text-xs text-muted">Data: <b className="text-text">{status?.data_provider ?? '—'}</b></span>
+          <span className="text-xs text-muted" title="Filters are re-checked on every WebSocket tick when active, otherwise on 5-minute candle close">Checks: <b className={status?.engine?.tick_active ? 'text-up' : 'text-text'}>{status?.engine?.tick_active ? 'EVERY TICK' : status?.engine?.eval_mode === 'tick' ? '5-MIN (waiting for WebSocket)' : '5-MIN CLOSE'}</b></span>
           <span className="text-xs">NIFTY <b className="num">{num(nifty)}</b>{' '}
             <span className={clsx('num', (niftyChg ?? 0) >= 0 ? 'text-up' : 'text-down')}>({signed(niftyChg)})</span></span>
-          <span className="text-xs">Regime:{' '}
-            <b className={s?.regime === 'BUY' ? 'text-up' : s?.regime === 'SELL' ? 'text-down' : 'text-warn'}>{s?.regime ?? 'pending'}</b></span>
+          {status?.selection_mode === 'watchlist' ? (
+            <span className="text-xs">Bot:{' '}
+              <b className={s?.regime === 'WATCHLIST' ? 'text-up' : 'text-warn'}>{s?.regime === 'WATCHLIST' ? 'RUNNING' : 'WAITING FOR START'}</b></span>
+          ) : (
+            <span className="text-xs">Regime:{' '}
+              <b className={s?.regime === 'BUY' ? 'text-up' : s?.regime === 'SELL' ? 'text-down' : 'text-warn'}>{s?.regime ?? 'pending'}</b></span>
+          )}
           {status?.mock_db && <span className="text-xs text-warn">⚠ in-memory DB (Mongo down)</span>}
           {status?.runtime?.halted_date && <span className="text-xs text-down font-semibold">HALTED TODAY</span>}
         </header>

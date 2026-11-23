@@ -47,11 +47,14 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
 export type Status = 'PASS' | 'FAIL' | 'PENDING' | 'ERROR' | 'DISABLED'
 export interface FilterRes { filter_id: string; status: Status; passed: boolean; reason: string; values: Record<string, any> }
 export interface Candidate {
-  symbol: string; name?: string; industry?: string; market_cap_cr?: number; rank: number; side: 'BUY' | 'SELL'
-  month_high: boolean; month_low: boolean; month_high_level?: number; month_low_level?: number; last_close?: number
+  symbol: string; name?: string; industry?: string; market_cap_cr?: number; rank?: number; side: 'BUY' | 'SELL'
+  source?: 'watchlist'
+  month_high?: boolean; month_low?: boolean; month_high_level?: number; month_low_level?: number; last_close?: number
 }
+export interface WatchItem { symbol: string; side: 'BUY' | 'SELL'; name?: string | null; added_at?: string }
 export interface Session {
-  date: string; regime?: 'BUY' | 'SELL' | 'NO_TRADE'; nifty_change?: number; nifty_price?: number; nifty_prev_close?: number
+  date: string; regime?: 'BUY' | 'SELL' | 'NO_TRADE' | 'WATCHLIST'; mode?: 'watchlist'; started_at?: string
+  nifty_change?: number; nifty_price?: number; nifty_prev_close?: number
   nifty_price_source?: string; regime_rule?: string; regime_threshold?: number
   buy_candidates: Candidate[]; sell_candidates: Candidate[]; scanned_at?: string; regime_at?: string
   month_high_count?: number; month_low_count?: number; scan_universe_size?: number
@@ -63,7 +66,7 @@ export interface FilterState {
 }
 export interface Position {
   _id: string; symbol: string; side: 'BUY' | 'SELL'; qty: number; entry_price: number; entry_time: string
-  sl?: number; target?: number; ltp?: number; unrealized?: number; mode: string; broker: string; status: string
+  ltp?: number; unrealized?: number; mode: string; broker: string; status: string
   exit_price?: number; exit_reason?: string
 }
 export interface Trade {

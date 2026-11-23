@@ -13,6 +13,7 @@ import Positions from './pages/Positions'
 import Scanner from './pages/Scanner'
 import Settings from './pages/Settings'
 import Trades from './pages/Trades'
+import Watchlist from './pages/Watchlist'
 
 function Protected() {
   useEffect(() => { connectLive() }, [])
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<Protected />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/scanner" element={<Scanner />} />
         <Route path="/chart" element={<Charts />} />
         <Route path="/positions" element={<Positions />} />

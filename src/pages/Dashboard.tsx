@@ -19,6 +19,8 @@ export default function Dashboard() {
   const pnlQ = useQuery({ queryKey: ['pnl-intraday'], queryFn: () => api<any[]>('/pnl/intraday'), refetchInterval: 60000 })
   const logsQ = useQuery({ queryKey: ['logs'], queryFn: () => api<LogItem[]>('/logs?limit=30') })
   const rtQ = useQuery({ queryKey: ['runtime'], queryFn: () => api('/settings/runtime') })
+  const stQ = useQuery({ queryKey: ['status'], queryFn: () => api('/status'), refetchInterval: 15000 })
+  const wlMode = stQ.data?.selection_mode === 'watchlist'
 
   useEffect(() => { qc.invalidateQueries() }, [version, qc])
 
@@ -47,11 +49,17 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted">{s?.date ?? '—'} · scanned {time(s?.scanned_at)} · regime {time(s?.regime_at)}</p>
+          <p className="text-sm text-muted">{wlMode
+            ? `${s?.date ?? '—'} · ${s?.regime === 'WATCHLIST' ? `bot started ${time(s?.started_at)}` : 'waiting for the 09:30 start'}`
+            : `${s?.date ?? '—'} · scanned ${time(s?.scanned_at)} · regime ${time(s?.regime_at)}`}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/scan')}><RefreshCw size={14} />Run scan</button>
-          <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/regime')}><Zap size={14} />Decide regime</button>
+          {wlMode
+            ? <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/start')}><Zap size={14} />Start now</button>
+            : <>
+                <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/scan')}><RefreshCw size={14} />Run scan</button>
+                <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/regime')}><Zap size={14} />Decide regime</button>
+              </>}
           <button className="btn" disabled={act.isPending} onClick={() => act.mutate('/engine/evaluate')}><Play size={14} />Evaluate filters</button>
           {halted
             ? <button className="btn btn-primary" onClick={() => act.mutate('/engine/resume')}><Power size={14} />Resume trading</button>
@@ -67,11 +75,16 @@ export default function Dashboard() {
         <Stat label="Margin used" value={inr(broker?.used, 0)} />
         <Stat label="Today P&L" value={signed(pnl?.total)} tone={pnlColor(pnl?.total)} sub={`Realized ${signed(pnl?.realized)} · Open ${signed(pnl?.unrealized)}`} />
         <Stat label="Trades today" value={pnl?.trades ?? 0} sub={`${pnl?.wins ?? 0} winners`} />
-        <Stat label="Nifty change" value={signed(s?.nifty_change)} tone={pnlColor(s?.nifty_change)} sub={s?.nifty_price_source ? `${s.nifty_price_source} · ±${s.regime_threshold} pts (${s.regime_rule})` : 'decided 09:30'} />
-        <Stat label="Today's side" value={<SideBadge side={s?.regime} />} sub={`${s?.month_high_count ?? 0} month-highs · ${s?.month_low_count ?? 0} month-lows`} />
+        {wlMode ? (<>
+          <Stat label="Watchlist" value={candidates.length} sub={`${s?.buy_candidates?.length ?? 0} BUY · ${s?.sell_candidates?.length ?? 0} SELL`} />
+          <Stat label="Bot" value={s?.regime === 'WATCHLIST' ? 'RUNNING' : 'WAITING'} tone={s?.regime === 'WATCHLIST' ? 'text-up' : 'text-warn'} sub={s?.regime === 'WATCHLIST' ? `since ${time(s?.started_at)}` : 'starts 09:30'} />
+        </>) : (<>
+          <Stat label="Nifty change" value={signed(s?.nifty_change)} tone={pnlColor(s?.nifty_change)} sub={s?.nifty_price_source ? `${s.nifty_price_source} · ±${s.regime_threshold} pts (${s.regime_rule})` : 'decided 09:30'} />
+          <Stat label="Today's side" value={<SideBadge side={s?.regime} />} sub={`${s?.month_high_count ?? 0} month-highs · ${s?.month_low_count ?? 0} month-lows`} />
+        </>)}
       </div>
 
-      <Card title="Filter matrix — today's 6 candidates" right={<span className="text-xs text-muted">hover a chip for details</span>}>
+      <Card title={wlMode ? `Filter matrix — watchlist (${candidates.length})` : "Filter matrix — today's 6 candidates"} right={<span className="text-xs text-muted">hover a chip for details</span>}>
         <FilterMatrix candidates={ordered} filters={filters} regime={s?.regime} positions={positions} />
       </Card>
 
@@ -80,13 +93,12 @@ export default function Dashboard() {
           {positions.length ? (
             <div className="overflow-x-auto">
               <table className="tbl">
-                <thead><tr><th>Stock</th><th>Side</th><th>Qty</th><th className="text-right">Entry</th><th className="text-right">LTP</th><th className="text-right">SL</th><th className="text-right">P&L</th><th>Since</th></tr></thead>
+                <thead><tr><th>Stock</th><th>Side</th><th>Qty</th><th className="text-right">Entry</th><th className="text-right">LTP</th><th className="text-right">P&L</th><th>Since</th></tr></thead>
                 <tbody>
                   {positions.map((p) => (
                     <tr key={p._id}>
                       <td className="font-semibold">{p.symbol}</td><td><SideBadge side={p.side} /></td><td className="num">{p.qty}</td>
                       <td className="num text-right">{num(p.entry_price)}</td><td className="num text-right">{num(live.ltp[p.symbol] ?? p.ltp)}</td>
-                      <td className="num text-right text-muted">{num(p.sl)}</td>
                       <td className={`num text-right font-semibold ${pnlColor(p.unrealized)}`}>{signed(p.unrealized)}</td>
                       <td className="text-xs text-muted">{time(p.entry_time)}</td>
                     </tr>

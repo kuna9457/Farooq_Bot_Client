@@ -73,27 +73,57 @@ export default function Settings() {
         </div>
       </Card>
 
+      <Card title="Stock selection">
+        <div className="grid gap-4 sm:grid-cols-3 items-start">
+          <Field label="How are stocks chosen?" hint="Manual watchlist: you pick the stocks and their side on the Watchlist page — no 08:30 scan and no Nifty-points rule. Screener: the original month-high / month-low scan + Nifty regime.">
+            <select className="input" value={p.selection_mode} onChange={(e) => set('selection_mode', e.target.value)}>
+              <option value="watchlist">Manual watchlist</option>
+              <option value="screener">Screener (08:30 scan + Nifty regime)</option>
+            </select>
+          </Field>
+          {p.selection_mode === 'watchlist'
+            ? <Field label="Bot start time (HH:MM)" hint="Filters run and entries are allowed from this time. Default 09:30."><input className="input" value={p.start_time} onChange={(e) => set('start_time', e.target.value)} /></Field>
+            : <div />}
+          <div className="flex flex-col gap-2 pt-1">
+            <label className="label">Sides the bot may trade</label>
+            <div className="flex gap-4">
+              {(['BUY', 'SELL'] as const).map((sd) => (
+                <label key={sd} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.sides_enabled.includes(sd)}
+                  onChange={(e) => set('sides_enabled', e.target.checked ? [...p.sides_enabled, sd] : p.sides_enabled.filter((x: string) => x !== sd))} />Trade {sd} side</label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="When filters are checked">
+        <div className="grid gap-4 sm:grid-cols-3 items-start">
+          <Field label="Evaluation mode" hint="Tick: every live WebSocket tick (forming 5-min candle). Candle close: only when a 5-min candle completes.">
+            <select className="input" value={p.eval_mode} onChange={(e) => set('eval_mode', e.target.value)}>
+              <option value="tick">Every tick (Angel WebSocket)</option>
+              <option value="bar_close">5-minute candle close</option>
+            </select>
+          </Field>
+          <Field label="Min seconds between checks per stock" hint="Throttle so a busy stock doesn't recompute on every single tick">{numIn('tick_interval_sec', 0.2)}</Field>
+          <p className="text-xs text-muted">Tick mode needs the Angel One WebSocket (Broker page). Without it the bot falls back to 5-minute candle closes automatically. Signals on a still-forming candle can appear and disappear (repaint) before the candle closes.</p>
+        </div>
+      </Card>
+
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Pre-market scan (08:30)">
+        {p.selection_mode === 'screener' && <Card title="Pre-market scan (08:30)">
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Month lookback (sessions)" hint="New month high = prev day ≥ highest of last N">{numIn('scan.month_lookback_days')}</Field>
             <Field label="Basis">{sel('scan.month_basis', ['high_low', 'close'])}</Field>
             <Field label="Top N per side">{numIn('scan.top_n')}</Field>
           </div>
-        </Card>
-        <Card title="Market regime (Nifty)">
+        </Card>}
+        {p.selection_mode === 'screener' && <Card title="Market regime (Nifty)">
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Threshold (points)">{numIn('regime.threshold_points')}</Field>
             <Field label="Rule" hint="literal: >+T BUY else SELL · symmetric: ±T with no-trade zone">{sel('regime.rule', ['literal', 'symmetric'])}</Field>
             <Field label="Decision time (HH:MM)"><input className="input" value={p.regime.decision_time} onChange={(e) => set('regime.decision_time', e.target.value)} /></Field>
           </div>
-          <div className="mt-3 flex gap-4">
-            {(['BUY', 'SELL'] as const).map((s) => (
-              <label key={s} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.sides_enabled.includes(s)}
-                onChange={(e) => set('sides_enabled', e.target.checked ? [...p.sides_enabled, s] : p.sides_enabled.filter((x: string) => x !== s))} />Trade {s} side</label>
-            ))}
-          </div>
-        </Card>
+        </Card>}
         <Card title="Filter 1 · 5-year chart · anchored volume profile">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-3 flex gap-4">{chk('filter1.enabled', 'Enabled')}{chk('filter1.use_heikin_ashi', 'Heikin-Ashi')}</div>
@@ -156,15 +186,12 @@ export default function Settings() {
             <Field label="Capital per trade (₹)">{numIn('risk.capital_per_trade', 1000)}</Field>
             <Field label="Max open positions">{numIn('risk.max_open_positions')}</Field>
             <div className="flex items-end pb-2">{chk('risk.one_trade_per_stock_per_day', 'One trade / stock / day')}</div>
-            <Field label="Stop-loss type">{sel('risk.stop_loss_type', ['none', 'percent', 'ce_stop'])}</Field>
-            <Field label="Stop-loss %">{numIn('risk.stop_loss_pct', 0.1)}</Field>
-            <Field label="Target % (0 = none)">{numIn('risk.target_pct', 0.1)}</Field>
             <Field label="Last entry time"><input className="input" value={p.risk.last_entry_time} onChange={(e) => set('risk.last_entry_time', e.target.value)} /></Field>
             <Field label="Square-off time"><input className="input" value={p.risk.square_off_time} onChange={(e) => set('risk.square_off_time', e.target.value)} /></Field>
             <Field label="Daily loss limit ₹ (0 = off)">{numIn('risk.daily_loss_limit', 500)}</Field>
             <Field label="Slippage % (paper/backtest)">{numIn('risk.slippage_pct', 0.01)}</Field>
           </div>
-          <p className="mt-3 text-xs text-muted">Primary exit: opposite Chandelier signal on the 5-minute chart. Stop-loss/target are monitored on live prices.</p>
+          <p className="mt-3 text-xs text-muted">Exit: the opposite Chandelier signal on the 5-minute chart (no stop-loss / target). Anything still open is squared off at the square-off time.</p>
         </Card>
       </div>
     </div>
