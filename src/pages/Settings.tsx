@@ -199,7 +199,8 @@ export default function Settings() {
                 <option value="open_close">Open and close</option>
               </select>
             </Field>
-            <div className="sm:col-span-3">{chk('filter3.wait_for_candle_close', 'Wait for the 5-min candle to close (Chandelier + POC are judged on the closed candle, not the forming one)')}</div>
+            <div className="sm:col-span-3">{chk('filter3.wait_for_candle_close', 'Wait for the 5-min candle to close (Chandelier entry/exit + POC are judged on the closed candle, not the forming one)')}</div>
+            <div className="sm:col-span-3">{chk('filter3.reentry_requires_new_signal', 'After an exit, re-enter the same stock only on a NEW Chandelier signal (printed after the exit) with the POC close confirmation')}</div>
             <p className="sm:col-span-3 text-[11px] text-muted">“Extend right” in TradingView only stretches the drawn lines; the bot always compares today's candles with the previous day's POC, so there is nothing to set for it.</p>
           </div>
         </Card>
